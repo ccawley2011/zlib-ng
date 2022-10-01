@@ -93,45 +93,110 @@
 
 /* Reverse the bytes in a value. Use compiler intrinsics when
    possible to take advantage of hardware implementations. */
+#ifdef __has_builtin
+#  if __has_builtin(__builtin_bswap16)
+#    define ZSWAP16(q) __builtin_bswap16(q)
+#  endif
+#  if __has_builtin(__builtin_bswap32)
+#    define ZSWAP32(q) __builtin_bswap32(q)
+#  endif
+#  if __has_builtin(__builtin_bswap16)
+#    define ZSWAP64(q) __builtin_bswap64(q)
+#  endif
+#endif
+
 #if defined(_MSC_VER) && (_MSC_VER >= 1300)
 #  include <stdlib.h>
 #  pragma intrinsic(_byteswap_ulong)
-#  define ZSWAP16(q) _byteswap_ushort(q)
-#  define ZSWAP32(q) _byteswap_ulong(q)
-#  define ZSWAP64(q) _byteswap_uint64(q)
+#  ifndef ZSWAP16
+#    define ZSWAP16(q) _byteswap_ushort(q)
+#  endif
+#  ifndef ZSWAP32
+#    define ZSWAP32(q) _byteswap_ulong(q)
+#  endif
+#  ifndef ZSWAP64
+#    define ZSWAP64(q) _byteswap_uint64(q)
+#  endif
 
-#elif defined(__clang__) || (defined(__GNUC__) && \
+#elif (defined(__GNUC__) && \
         (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8)))
-#  define ZSWAP16(q) __builtin_bswap16(q)
-#  define ZSWAP32(q) __builtin_bswap32(q)
-#  define ZSWAP64(q) __builtin_bswap64(q)
+#  ifndef ZSWAP16
+#    define ZSWAP16(q) __builtin_bswap16(q)
+#  endif
+#  ifndef ZSWAP32
+#    define ZSWAP32(q) __builtin_bswap32(q)
+#  endif
+#  ifndef ZSWAP64
+#    define ZSWAP64(q) __builtin_bswap64(q)
+#  endif
 
 #elif defined(__GNUC__) && (__GNUC__ >= 2) && defined(__linux__)
 #  include <byteswap.h>
-#  define ZSWAP16(q) bswap_16(q)
-#  define ZSWAP32(q) bswap_32(q)
-#  define ZSWAP64(q) bswap_64(q)
+#  ifndef ZSWAP16
+#    define ZSWAP16(q) bswap_16(q)
+#  endif
+#  ifndef ZSWAP32
+#    define ZSWAP32(q) bswap_32(q)
+#  endif
+#  ifndef ZSWAP64
+#    define ZSWAP64(q) bswap_64(q)
+#  endif
 
 #elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
 #  include <sys/endian.h>
-#  define ZSWAP16(q) bswap16(q)
-#  define ZSWAP32(q) bswap32(q)
-#  define ZSWAP64(q) bswap64(q)
+#  ifndef ZSWAP16
+#    define ZSWAP16(q) bswap16(q)
+#  endif
+#  ifndef ZSWAP32
+#    define ZSWAP32(q) bswap32(q)
+#  endif
+#  ifndef ZSWAP64
+#    define ZSWAP64(q) bswap64(q)
+#  endif
+
 #elif defined(__OpenBSD__)
 #  include <sys/endian.h>
-#  define ZSWAP16(q) swap16(q)
-#  define ZSWAP32(q) swap32(q)
-#  define ZSWAP64(q) swap64(q)
+#  ifndef ZSWAP16
+#    define ZSWAP16(q) swap16(q)
+#  endif
+#  ifndef ZSWAP32
+#    define ZSWAP32(q) swap32(q)
+#  endif
+#  ifndef ZSWAP64
+#    define ZSWAP64(q) swap64(q)
+#  endif
+
+#elif (defined(__GNUC__) && \
+        (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)))
+/* Earlier versions of GCC do not provide a two byte swap on all architectures. */
+#  ifndef ZSWAP32
+#    define ZSWAP32(q) __builtin_bswap32(q)
+#  endif
+#  ifndef ZSWAP64
+#    define ZSWAP64(q) __builtin_bswap64(q)
+#  endif
+
 #elif defined(__INTEL_COMPILER)
 /* ICC does not provide a two byte swap. */
-#  define ZSWAP16(q) ((((q) & 0xff) << 8) | (((q) & 0xff00) >> 8))
-#  define ZSWAP32(q) _bswap(q)
-#  define ZSWAP64(q) _bswap64(q)
+#  ifndef ZSWAP32
+#    define ZSWAP32(q) _bswap(q)
+#  endif
+#  ifndef ZSWAP64
+#    define ZSWAP64(q) _bswap64(q)
+#  endif
 
-#else
+#endif
+
+#ifndef ZSWAP16
 #  define ZSWAP16(q) ((((q) & 0xff) << 8) | (((q) & 0xff00) >> 8))
+#endif
+
+#ifndef ZSWAP32
 #  define ZSWAP32(q) ((((q) >> 24) & 0xff) + (((q) >> 8) & 0xff00) + \
                      (((q) & 0xff00) << 8) + (((q) & 0xff) << 24))
+#endif
+
+#ifndef ZSWAP64
 #  define ZSWAP64(q)                           \
          (((q & 0xFF00000000000000u) >> 56u) | \
           ((q & 0x00FF000000000000u) >> 40u) | \
