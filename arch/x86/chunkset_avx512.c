@@ -2,6 +2,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 #include "zbuild.h"
+#include "zmemory.h"
 
 #ifdef X86_AVX512
 
@@ -33,21 +34,15 @@ static inline mask_t gen_mask(unsigned len) {
 }
 
 static inline void chunkmemset_2(uint8_t *from, chunk_t *chunk) {
-    int16_t tmp;
-    memcpy(&tmp, from, sizeof(tmp));
-    *chunk = _mm256_set1_epi16(tmp);
+    *chunk = _mm256_set1_epi16(zng_memread_2(from));
 }
 
 static inline void chunkmemset_4(uint8_t *from, chunk_t *chunk) {
-    int32_t tmp;
-    memcpy(&tmp, from, sizeof(tmp));
-    *chunk = _mm256_set1_epi32(tmp);
+    *chunk = _mm256_set1_epi32(zng_memread_4(from));
 }
 
 static inline void chunkmemset_8(uint8_t *from, chunk_t *chunk) {
-    int64_t tmp;
-    memcpy(&tmp, from, sizeof(tmp));
-    *chunk = _mm256_set1_epi64x(tmp);
+    *chunk = _mm256_set1_epi64x(zng_memread_8(from));
 }
 
 static inline void chunkmemset_16(uint8_t *from, chunk_t *chunk) {
