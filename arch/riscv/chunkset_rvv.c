@@ -11,6 +11,8 @@
  * so we prefer using large size chunk and copy memory as much as possible.
  */
 #define CHUNK_SIZE 32
+/* TODO: Is this the most ideal alignment? */
+#define CHUNK_ALIGN 32
 
 #define HAVE_CHUNKMEMSET_2
 #define HAVE_CHUNKMEMSET_4
@@ -51,6 +53,16 @@ static inline void loadchunk(uint8_t const *s, chunk_t *chunk) {
 }
 
 static inline void storechunk(uint8_t *out, chunk_t *chunk) {
+    memcpy(out, chunk->data, CHUNK_SIZE);
+}
+
+static inline void loadchunk_aligned(uint8_t const *s, chunk_t *chunk) {
+    /* TODO: Avoid memcpy for aligned pointers? */
+    memcpy(chunk->data, (uint8_t *)s, CHUNK_SIZE);
+}
+
+static inline void storechunk_aligned(uint8_t *out, chunk_t *chunk) {
+    /* TODO: Avoid memcpy for aligned pointers? */
     memcpy(out, chunk->data, CHUNK_SIZE);
 }
 

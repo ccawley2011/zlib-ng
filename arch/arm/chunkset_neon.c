@@ -10,6 +10,7 @@
 typedef uint8x16_t chunk_t;
 
 #define CHUNK_SIZE 16
+#define CHUNK_ALIGN 16
 
 #define HAVE_CHUNKMEMSET_2
 #define HAVE_CHUNKMEMSET_4
@@ -61,6 +62,16 @@ static inline void loadchunk(uint8_t const *s, chunk_t *chunk) {
 }
 
 static inline void storechunk(uint8_t *out, chunk_t *chunk) {
+    vst1q_u8(out, *chunk);
+}
+
+static inline void loadchunk_aligned(uint8_t const *s, chunk_t *chunk) {
+    /* TODO: Use vld1q_u8_ex where available? */
+    *chunk = vld1q_u8(s);
+}
+
+static inline void storechunk_aligned(uint8_t *out, chunk_t *chunk) {
+    /* TODO: Use vst1q_u8_ex where available? */
     vst1q_u8(out, *chunk);
 }
 

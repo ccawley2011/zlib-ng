@@ -10,6 +10,7 @@
 typedef __m256i chunk_t;
 
 #define CHUNK_SIZE 32
+#define CHUNK_ALIGN 32
 
 #define HAVE_CHUNKMEMSET_2
 #define HAVE_CHUNKMEMSET_4
@@ -74,6 +75,14 @@ static inline void loadchunk(uint8_t const *s, chunk_t *chunk) {
 
 static inline void storechunk(uint8_t *out, chunk_t *chunk) {
     _mm256_storeu_si256((__m256i *)out, *chunk);
+}
+
+static inline void loadchunk_aligned(uint8_t const *s, chunk_t *chunk) {
+    *chunk = _mm256_load_si256((__m256i *)s);
+}
+
+static inline void storechunk_aligned(uint8_t *out, chunk_t *chunk) {
+    _mm256_store_si256((__m256i *)out, *chunk);
 }
 
 static inline chunk_t GET_CHUNK_MAG(uint8_t *buf, uint32_t *chunk_rem, uint32_t dist) {

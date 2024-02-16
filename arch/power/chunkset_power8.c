@@ -9,6 +9,7 @@
 typedef vector unsigned char chunk_t;
 
 #define CHUNK_SIZE 16
+#define CHUNK_ALIGN 16
 
 #define HAVE_CHUNKMEMSET_2
 #define HAVE_CHUNKMEMSET_4
@@ -38,6 +39,14 @@ static inline void loadchunk(uint8_t const *s, chunk_t *chunk) {
 
 static inline void storechunk(uint8_t *out, chunk_t *chunk) {
     vec_xst(*chunk, 0, out);
+}
+
+static inline void loadchunk_aligned(uint8_t const *s, chunk_t *chunk) {
+    *chunk = vec_ld(0, s);
+}
+
+static inline void storechunk_aligned(uint8_t *out, chunk_t *chunk) {
+    vec_st(*chunk, 0, out);
 }
 
 #define CHUNKSIZE        chunksize_power8

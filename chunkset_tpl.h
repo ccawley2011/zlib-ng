@@ -104,6 +104,10 @@ Z_INTERNAL uint8_t* CHUNKMEMSET(uint8_t *out, unsigned dist, unsigned len) {
     }
 #endif
 
+#if CHUNK_ALIGN
+    static const uint32_t align_mask = CHUNK_ALIGN - 1;
+#endif
+
     uint8_t *from = out - dist;
 
     if (dist == 1) {
@@ -130,34 +134,63 @@ Z_INTERNAL uint8_t* CHUNKMEMSET(uint8_t *out, unsigned dist, unsigned len) {
 #ifdef HAVE_CHUNKMEMSET_8
     if (dist == 8) {
         chunkmemset_8(from, &chunk_load);
-    } else if (dist == sizeof(chunk_t)) {
-        loadchunk(from, &chunk_load);
     } else
 #endif
-    {
+    if (dist == sizeof(chunk_t)) {
+#if CHUNK_ALIGN
+        if (((uintptr_t)from & align_mask) == 0)
+            loadchunk_aligned(from, &chunk_load);
+        else
+#endif
+            loadchunk(from, &chunk_load);
+    } else {
         chunk_load = GET_CHUNK_MAG(from, &chunk_mod, dist);
     }
 
     /* If we're lucky enough and dist happens to be an even modulus of our vector length,
      * we can do two stores per loop iteration, which for most ISAs, especially x86, is beneficial */
     if (chunk_mod == 0) {
-        while (len >= (2 * sizeof(chunk_t))) {
-            storechunk(out, &chunk_load);
-            storechunk(out + sizeof(chunk_t), &chunk_load);
-            out += 2 * sizeof(chunk_t);
-            len -= 2 * sizeof(chunk_t);
-        }
-    }
+#if CHUNK_ALIGN
+        if (((uintptr_t)out & align_mask) == 0) {
+            while (len >= (2 * sizeof(chunk_t))) {
+                storechunk_aligned(out, &chunk_load);
+                storechunk_aligned(out + sizeof(chunk_t), &chunk_load);
+                out += 2 * sizeof(chunk_t);
+                len -= 2 * sizeof(chunk_t);
+            }
 
-    /* If we don't have a "dist" length that divides evenly into a vector
-     * register, we can write the whole vector register but we need only
-     * advance by the amount of the whole string that fits in our chunk_t.
-     * If we do divide evenly into the vector length, adv_amount = chunk_t size*/
-    uint32_t adv_amount = sizeof(chunk_t) - chunk_mod;
-    while (len >= sizeof(chunk_t)) {
-        storechunk(out, &chunk_load);
-        len -= adv_amount;
-        out += adv_amount;
+            while (len >= sizeof(chunk_t)) {
+                storechunk_aligned(out, &chunk_load);
+                len -= sizeof(chunk_t);
+                out += sizeof(chunk_t);
+            }
+        } else
+#endif
+        {
+            while (len >= (2 * sizeof(chunk_t))) {
+                storechunk(out, &chunk_load);
+                storechunk(out + sizeof(chunk_t), &chunk_load);
+                out += 2 * sizeof(chunk_t);
+                len -= 2 * sizeof(chunk_t);
+            }
+
+            while (len >= sizeof(chunk_t)) {
+                storechunk(out, &chunk_load);
+                len -= sizeof(chunk_t);
+                out += sizeof(chunk_t);
+            }
+        }
+    } else {
+        /* If we don't have a "dist" length that divides evenly into a vector
+         * register, we can write the whole vector register but we need only
+         * advance by the amount of the whole string that fits in our chunk_t.
+         * If we do divide evenly into the vector length, adv_amount = chunk_t size*/
+        uint32_t adv_amount = sizeof(chunk_t) - chunk_mod;
+        while (len >= sizeof(chunk_t)) {
+            storechunk(out, &chunk_load);
+            len -= adv_amount;
+            out += adv_amount;
+        }
     }
 
     if (len) {
@@ -169,17 +202,13 @@ Z_INTERNAL uint8_t* CHUNKMEMSET(uint8_t *out, unsigned dist, unsigned len) {
 }
 
 Z_INTERNAL uint8_t* CHUNKMEMSET_SAFE(uint8_t *out, unsigned dist, unsigned len, unsigned left) {
-#if !defined(UNALIGNED64_OK)
-#  if !defined(UNALIGNED_OK)
-    static const uint32_t align_mask = 7;
-#  else
-    static const uint32_t align_mask = 3;
-#  endif
+#if CHUNK_ALIGN
+    static const uint32_t align_mask = CHUNK_ALIGN - 1;
 #endif
 
     len = MIN(len, left);
     uint8_t *from = out - dist;
-#if !defined(UNALIGNED64_OK)
+#if CHUNK_ALIGN
     while (((uintptr_t)out & align_mask) && (len > 0)) {
         *out++ = *from++;
         --len;

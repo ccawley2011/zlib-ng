@@ -14,6 +14,7 @@
 typedef __m128i chunk_t;
 
 #define CHUNK_SIZE 16
+#define CHUNK_ALIGN 16
 
 #define HAVE_CHUNKMEMSET_2
 #define HAVE_CHUNKMEMSET_4
@@ -63,6 +64,14 @@ static inline void loadchunk(uint8_t const *s, chunk_t *chunk) {
 
 static inline void storechunk(uint8_t *out, chunk_t *chunk) {
     _mm_storeu_si128((__m128i *)out, *chunk);
+}
+
+static inline void loadchunk_aligned(uint8_t const *s, chunk_t *chunk) {
+    *chunk = _mm_load_si128((__m128i *)s);
+}
+
+static inline void storechunk_aligned(uint8_t *out, chunk_t *chunk) {
+    _mm_store_si128((__m128i *)out, *chunk);
 }
 
 static inline chunk_t GET_CHUNK_MAG(uint8_t *buf, uint32_t *chunk_rem, uint32_t dist) {
