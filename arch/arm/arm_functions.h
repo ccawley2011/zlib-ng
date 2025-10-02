@@ -8,7 +8,7 @@
 #ifdef ARM_NEON
 uint32_t adler32_neon(uint32_t adler, const uint8_t *buf, size_t len);
 uint32_t adler32_fold_copy_neon(uint32_t adler, uint8_t *dst, const uint8_t *src, size_t len);
-uint8_t* chunkmemset_safe_neon(uint8_t *out, uint8_t *from, unsigned len, unsigned left);
+uint8_t* chunkmemset_safe_neon(uint8_t *out, uint8_t *from, size_t len, size_t left);
 
 #  ifdef HAVE_BUILTIN_CTZLL
 uint32_t compare256_neon(const uint8_t *src0, const uint8_t *src1);

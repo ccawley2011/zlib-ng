@@ -23,7 +23,7 @@ void slide_hash_lsx(deflate_state *s);
     uint32_t longest_match_lsx(deflate_state *const s, Pos cur_match);
     uint32_t longest_match_slow_lsx(deflate_state *const s, Pos cur_match);
 #  endif
-uint8_t* chunkmemset_safe_lsx(uint8_t *out, uint8_t *from, unsigned len, unsigned left);
+uint8_t* chunkmemset_safe_lsx(uint8_t *out, uint8_t *from, size_t len, size_t left);
 void inflate_fast_lsx(PREFIX3(stream) *strm, uint32_t start);
 #endif
 
@@ -36,7 +36,7 @@ void slide_hash_lasx(deflate_state *s);
     uint32_t longest_match_lasx(deflate_state *const s, Pos cur_match);
     uint32_t longest_match_slow_lasx(deflate_state *const s, Pos cur_match);
 #  endif
-uint8_t* chunkmemset_safe_lasx(uint8_t *out, uint8_t *from, unsigned len, unsigned left);
+uint8_t* chunkmemset_safe_lasx(uint8_t *out, uint8_t *from, size_t len, size_t left);
 void inflate_fast_lasx(PREFIX3(stream) *strm, uint32_t start);
 #endif
 

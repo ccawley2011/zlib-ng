@@ -14,7 +14,7 @@ void slide_hash_vmx(deflate_state *s);
 
 #ifdef POWER8_VSX
 uint32_t adler32_power8(uint32_t adler, const uint8_t *buf, size_t len);
-uint8_t* chunkmemset_safe_power8(uint8_t *out, uint8_t *from, unsigned len, unsigned left);
+uint8_t* chunkmemset_safe_power8(uint8_t *out, uint8_t *from, size_t len, size_t left);
 uint32_t crc32_power8(uint32_t crc, const uint8_t *buf, size_t len);
 void slide_hash_power8(deflate_state *s);
 void inflate_fast_power8(PREFIX3(stream) *strm, uint32_t start);
