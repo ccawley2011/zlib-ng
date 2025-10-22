@@ -418,6 +418,10 @@ static inline void put_uint64(deflate_state *s, uint64_t lld) {
  * distances are limited to MAX_DIST instead of WSIZE.
  */
 
+#define IS_VALID_DIST(s, head) ((s)->strstart > head && (s)->strstart - (head) <= MAX_DIST(s))
+/* Helper macro to check the distance between the string start and the head.
+ */
+
 #define WIN_INIT STD_MAX_MATCH
 /* Number of bytes after end of data in window to initialize in order to avoid
    memory checker errors from longest match routines */

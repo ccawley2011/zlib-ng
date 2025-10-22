@@ -46,7 +46,6 @@ extern const ct_data static_dtree[D_CODES];
 
 Z_INTERNAL block_state deflate_quick(deflate_state *s, int flush) {
     Pos hash_head;
-    int64_t dist;
     unsigned match_len, last;
 
 
@@ -87,9 +86,8 @@ Z_INTERNAL block_state deflate_quick(deflate_state *s, int flush) {
 
         if (LIKELY(s->lookahead >= WANT_MIN_MATCH)) {
             hash_head = quick_insert_string(s, s->strstart);
-            dist = (int64_t)s->strstart - hash_head;
 
-            if (dist <= MAX_DIST(s) && dist > 0) {
+            if (IS_VALID_DIST(s, hash_head)) {
                 const uint8_t *str_start = s->window + s->strstart;
                 const uint8_t *match_start = s->window + hash_head;
 
@@ -105,7 +103,7 @@ Z_INTERNAL block_state deflate_quick(deflate_state *s, int flush) {
                         Assert(s->strstart <= UINT16_MAX, "strstart should fit in uint16_t");
                         check_match(s, (Pos)s->strstart, hash_head, match_len);
 
-                        zng_tr_emit_dist(s, static_ltree, static_dtree, match_len - STD_MIN_MATCH, (uint32_t)dist);
+                        zng_tr_emit_dist(s, static_ltree, static_dtree, match_len - STD_MIN_MATCH, (uint32_t)(s->strstart - hash_head));
                         s->lookahead -= match_len;
                         s->strstart += match_len;
                         continue;
